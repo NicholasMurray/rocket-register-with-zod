@@ -54,6 +54,7 @@ const App: React.FC = () => {
   // Reset form and update with editing rocket data when it changes
   React.useEffect(() => {
     if (editingRocket) {
+      // When editing a rocket, populate the form with its data
       methods.reset({
         name: editingRocket.name,
         model: editingRocket.model,
@@ -70,6 +71,24 @@ const App: React.FC = () => {
       setCurrentStep(FormStep.Page1);
     }
   }, [editingRocket, methods]);
+
+  // Add another useEffect to handle initial form state
+  React.useEffect(() => {
+    // Clear form data when the component mounts
+    methods.reset({
+      name: '',
+      model: '',
+      manufacturer: '',
+      yearBuilt: new Date().getFullYear(),
+      height: 0,
+      diameter: 0,
+      mass: 0,
+      fuelType: '',
+      maxThrust: 0,
+      capacity: 0,
+      description: '',
+    });
+  }, [methods]); // This will run only once on component mount
 
   const handleNextStep = () => {
     switch (currentStep) {
@@ -123,22 +142,54 @@ const App: React.FC = () => {
         await addRocket(values);
       }
       
+      // Only move to success page after the async operation completes
+      // and the status has been set to success
       setCurrentStep(FormStep.Success);
       methods.reset();
     } catch (error) {
       console.error('Error submitting form:', error);
+      // The status will already be set to 'error' in the hook
     }
   };
 
   const handleAddNew = () => {
-    methods.reset();
+    // First cancel any ongoing editing
     cancelEditing();
+    
+    // Reset the form with explicit default values
+    methods.reset({
+      name: '',
+      model: '',
+      manufacturer: '',
+      yearBuilt: new Date().getFullYear(),
+      height: 0,
+      diameter: 0,
+      mass: 0,
+      fuelType: '',
+      maxThrust: 0,
+      capacity: 0,
+      description: '',
+    });
+    
+    // Then navigate to the first page
     setCurrentStep(FormStep.Page1);
   };
 
   const handleCancelEdit = () => {
     cancelEditing();
-    methods.reset();
+    methods.reset({
+      name: '',
+      model: '',
+      manufacturer: '',
+      yearBuilt: new Date().getFullYear(),
+      height: 0,
+      diameter: 0,
+      mass: 0,
+      fuelType: '',
+      maxThrust: 0,
+      capacity: 0,
+      description: '',
+    });
     setCurrentStep(FormStep.List);
   };
 
@@ -159,14 +210,30 @@ const App: React.FC = () => {
             onCancel={handleCancelEdit}
           />
         );
-      case FormStep.Success:
-        return (
-          <RocketFormSuccess 
-            status={submissionStatus}
-            onContinue={() => setCurrentStep(FormStep.List)}
-            resetStatus={resetSubmissionStatus}
-          />
-        );
+        case FormStep.Success:
+          return (
+            <RocketFormSuccess 
+              status={submissionStatus}
+              onContinue={() => {
+                // Reset the form before navigating to the list view
+                methods.reset({
+                  name: '',
+                  model: '',
+                  manufacturer: '',
+                  yearBuilt: new Date().getFullYear(),
+                  height: 0,
+                  diameter: 0,
+                  mass: 0,
+                  fuelType: '',
+                  maxThrust: 0,
+                  capacity: 0,
+                  description: '',
+                });
+                setCurrentStep(FormStep.List);
+              }}
+              resetStatus={resetSubmissionStatus}
+            />
+          );
       case FormStep.List:
         return (
           <RocketsList 

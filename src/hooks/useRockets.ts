@@ -8,6 +8,9 @@ export const useRockets = () => {
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const addRocket = (rocketData: RocketFormData) => {
+    // Set status to idle first to clear any previous status
+    setSubmissionStatus('idle');
+    
     return new Promise<void>((resolve, reject) => {
       // Simulate API call with 500ms delay
       setTimeout(() => {
@@ -16,6 +19,7 @@ export const useRockets = () => {
             ...rocketData,
             id: Date.now().toString(),
           };
+          
           setRockets(prev => [...prev, newRocket]);
           setSubmissionStatus('success');
           resolve();
@@ -28,6 +32,9 @@ export const useRockets = () => {
   };
 
   const updateRocket = (id: string, rocketData: RocketFormData) => {
+    // Set status to idle first to clear any previous status
+    setSubmissionStatus('idle');
+    
     return new Promise<void>((resolve, reject) => {
       setTimeout(() => {
         try {

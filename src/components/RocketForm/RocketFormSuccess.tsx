@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from '../ui/Button';
 
 interface RocketFormSuccessProps {
-  status: 'success' | 'error';
+  status: 'idle' | 'success' | 'error';
   onContinue: () => void;
   resetStatus: () => void;
 }
@@ -12,10 +12,13 @@ export const RocketFormSuccess: React.FC<RocketFormSuccessProps> = ({
   onContinue,
   resetStatus
 }) => {
-  // Reset status when component unmounts
-  useEffect(() => {
-    return () => resetStatus();
-  }, [resetStatus]);
+  // Do not reset status on unmount - this was causing the issue
+  // Instead, we'll reset it when moving to the list view
+  
+  const handleContinue = () => {
+    resetStatus(); // Reset the submission status
+    onContinue(); // Call the parent handler which navigates to the list view
+  };
   
   return (
     <div className="text-center py-8">
@@ -29,7 +32,7 @@ export const RocketFormSuccess: React.FC<RocketFormSuccessProps> = ({
           <h2 className="text-2xl font-bold mb-2">Rocket Registration Successful!</h2>
           <p className="text-gray-600 mb-6">Your rocket has been registered successfully in our database.</p>
         </>
-      ) : (
+      ) : status === 'error' ? (
         <>
           <div className="mb-4 text-red-600">
             <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
@@ -39,9 +42,12 @@ export const RocketFormSuccess: React.FC<RocketFormSuccessProps> = ({
           <h2 className="text-2xl font-bold mb-2">Registration Failed</h2>
           <p className="text-gray-600 mb-6">There was an error registering your rocket. Please try again.</p>
         </>
+      ) : (
+        // Fallback for 'idle' state, though it shouldn't be visible in practice
+        <p>Processing your request...</p>
       )}
       
-      <Button onClick={onContinue}>
+      <Button onClick={handleContinue}>
         View All Rockets
       </Button>
     </div>
