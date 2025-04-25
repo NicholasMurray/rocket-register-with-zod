@@ -1,44 +1,28 @@
-import { JSX, ReactNode } from "react";
+import React from 'react';
 
-type ButtonVariant = "primary" | "secondary" | "success" | "danger";
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'danger';
+  children: React.ReactNode;
+}
 
-type ButtonProps = {
-  children: ReactNode;
-  onClick?: () => void;
-  type?: "button" | "submit" | "reset";
-  variant?: ButtonVariant;
-  fullWidth?: boolean;
-  disabled?: boolean;
-  className?: string;
-};
-
-export const Button = ({ 
-  children, 
-  onClick, 
-  type = "button", 
-  variant = "primary",
-  fullWidth = false,
-  disabled = false,
-  className = ""
-}: ButtonProps): JSX.Element => {
-  const baseClasses = "px-4 py-2 rounded";
-  const widthClass = fullWidth ? "w-full" : "";
+export const Button: React.FC<ButtonProps> = ({
+  variant = 'primary',
+  children,
+  className,
+  ...props
+}) => {
+  const baseClasses = 'px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2';
   
   const variantClasses = {
-    primary: "bg-blue-500 text-white hover:bg-blue-600",
-    secondary: "bg-gray-500 text-white hover:bg-gray-600",
-    success: "bg-green-500 text-white hover:bg-green-600",
-    danger: "bg-red-500 text-white hover:bg-red-600"
+    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500',
+    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
   };
-  
-  const disabledClass = disabled ? "bg-gray-300 cursor-not-allowed" : "";
-  
+
   return (
     <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className={`${baseClasses} ${widthClass} ${variantClasses[variant]} ${disabledClass} ${className}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${className || ''}`}
+      {...props}
     >
       {children}
     </button>
