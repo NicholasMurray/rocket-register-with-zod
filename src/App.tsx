@@ -9,6 +9,7 @@ import { RocketFormSummary } from './components/RocketForm/RocketFormSummary';
 import { RocketFormSuccess } from './components/RocketForm/RocketFormSuccess';
 import { RocketsList } from './components/RocketsList/RocketsList';
 import { useRockets } from './hooks/useRockets';
+import { Button } from './components/ui/Button';
 
 const DEFAULT_ROCKET_FORM_VALUES: RocketFormValues = {
   name: '',
@@ -35,6 +36,7 @@ enum FormStep {
 
 const App: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<FormStep>(FormStep.List);
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const { 
     rockets, 
     editingRocket, 
@@ -153,42 +155,77 @@ const App: React.FC = () => {
     setCurrentStep(FormStep.Page1);
   };
 
-  const handleCancelEdit = () => {
-    cancelEditing();
-    methods.reset(DEFAULT_ROCKET_FORM_VALUES);
-    setCurrentStep(FormStep.List);
+  // Create a single cancel handler function
+  const handleCancelForm = () => {
+    // Check if the form has any filled values
+    const values = methods.getValues();
+    const hasFormData = Object.values(values).some(val => {
+      if (typeof val === 'string') return val.trim() !== '';
+      if (typeof val === 'number') return val !== 0 && val !== DEFAULT_ROCKET_FORM_VALUES.yearBuilt;
+      return val !== undefined;
+    });
+    
+    if (hasFormData) {
+      // If there's data, show confirmation
+      setShowCancelConfirmation(true);
+    } else {
+      // If no data, just cancel
+      cancelFormWithoutConfirmation();
+    }
   };
 
+  // Function to cancel without confirmation
+  const cancelFormWithoutConfirmation = () => {
+    methods.reset(DEFAULT_ROCKET_FORM_VALUES);
+    cancelEditing();
+    setCurrentStep(FormStep.List);
+    setShowCancelConfirmation(false);
+  };
+  
+  // Function to handle cancel dialog "No" button
+  const handleCancelDialogNo = () => {
+    setShowCancelConfirmation(false);
+  };
 
   const renderCurrentStep = () => {
     switch (currentStep) {
       case FormStep.Page1:
-        return <RocketFormPage1 onNext={handleNextStep} />;
+        return <RocketFormPage1 
+          onNext={handleNextStep}
+          onCancel={handleCancelForm}
+        />;
       case FormStep.Page2:
-        return <RocketFormPage2 onNext={handleNextStep} onPrevious={handlePreviousStep} />;
+        return <RocketFormPage2 
+          onNext={handleNextStep} 
+          onPrevious={handlePreviousStep}
+          onCancel={handleCancelForm}
+        />;
       case FormStep.Page3:
-        return <RocketFormPage3 onNext={handleNextStep} onPrevious={handlePreviousStep} />;
+        return <RocketFormPage3 
+          onNext={handleNextStep} 
+          onPrevious={handlePreviousStep}
+          onCancel={handleCancelForm}
+        />;
       case FormStep.Summary:
         return (
           <RocketFormSummary 
             onSubmit={handleSubmit} 
             onEdit={goToStep} 
             isEditing={!!editingRocket}
-            onCancel={handleCancelEdit}
+            onCancel={handleCancelForm}
           />
         );
-        case FormStep.Success:
-          return (
-            <RocketFormSuccess 
-              status={submissionStatus}
-              onContinue={() => {
-                // Reset the form before navigating to the list view
-                methods.reset(DEFAULT_ROCKET_FORM_VALUES);
-                setCurrentStep(FormStep.List);
-              }}
-              resetStatus={resetSubmissionStatus}
-            />
-          );
+      case FormStep.Success:
+        return (
+          <RocketFormSuccess 
+            status={submissionStatus}
+            onContinue={() => {
+              methods.reset(DEFAULT_ROCKET_FORM_VALUES);
+              setCurrentStep(FormStep.List);
+            }}
+            resetStatus={resetSubmissionStatus}
+          />
+        );
       case FormStep.List:
         return (
           <RocketsList 
@@ -244,6 +281,26 @@ const App: React.FC = () => {
         <FormProvider {...methods}>
           {renderCurrentStep()}
         </FormProvider>
+      
+      {/* Add cancel confirmation dialog */}
+      {showCancelConfirmation && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+              <h3 className="text-lg font-medium mb-4">Discard Changes?</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to cancel? All unsaved changes will be lost.
+              </p>
+              <div className="flex justify-end space-x-4">
+                <Button variant="secondary" onClick={handleCancelDialogNo}>
+                  No, Keep Editing
+                </Button>
+                <Button variant="danger" onClick={cancelFormWithoutConfirmation}>
+                  Yes, Discard
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

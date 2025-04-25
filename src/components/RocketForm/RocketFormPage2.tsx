@@ -9,9 +9,10 @@ import { RocketFormValues } from '../../schemas/rocketSchema';
 interface RocketFormPage2Props {
   onNext: () => void;
   onPrevious: () => void;
+  onCancel: () => void;
 }
 
-export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({ onNext, onPrevious }) => {
+export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({ onNext, onPrevious, onCancel }) => {
   const { register, formState: { errors } } = useFormContext<RocketFormValues>();
   
   const fuelOptions = [
@@ -86,9 +87,14 @@ export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({ onNext, onPrev
       </FormField>
       
       <div className="flex justify-between">
-        <Button variant="secondary" onClick={onPrevious}>
-          Previous
-        </Button>
+        <div>
+          <Button variant="secondary" onClick={onPrevious} className="mr-2">
+            Previous
+          </Button>
+          <Button variant="secondary" onClick={onCancel}>
+            Cancel
+          </Button>
+        </div>
         <Button onClick={onNext}>
           Next
         </Button>

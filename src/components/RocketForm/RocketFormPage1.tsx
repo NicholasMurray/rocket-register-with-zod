@@ -7,9 +7,10 @@ import { RocketFormValues } from '../../schemas/rocketSchema';
 
 interface RocketFormPage1Props {
   onNext: () => void;
+  onCancel: () => void;
 }
 
-export const RocketFormPage1: React.FC<RocketFormPage1Props> = ({ onNext }) => {
+export const RocketFormPage1: React.FC<RocketFormPage1Props> = ({ onNext, onCancel }) => {
   const { register, formState: { errors } } = useFormContext<RocketFormValues>();
   
   return (
@@ -70,6 +71,9 @@ export const RocketFormPage1: React.FC<RocketFormPage1Props> = ({ onNext }) => {
       </FormField>
       
       <div className="flex justify-end">
+        <Button variant="secondary" onClick={onCancel}>
+          Cancel
+        </Button>
         <Button onClick={onNext}>
           Next
         </Button>
