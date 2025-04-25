@@ -10,6 +10,20 @@ import { RocketFormSuccess } from './components/RocketForm/RocketFormSuccess';
 import { RocketsList } from './components/RocketsList/RocketsList';
 import { useRockets } from './hooks/useRockets';
 
+const DEFAULT_ROCKET_FORM_VALUES: RocketFormValues = {
+  name: '',
+  model: '',
+  manufacturer: '',
+  yearBuilt: new Date().getFullYear(),
+  height: 0,
+  diameter: 0,
+  mass: 0,
+  fuelType: '',
+  maxThrust: 0,
+  capacity: 0,
+  description: '',
+};
+
 enum FormStep {
   Page1,
   Page2,
@@ -35,19 +49,7 @@ const App: React.FC = () => {
 
   const methods = useForm<RocketFormValues>({
     resolver: zodResolver(rocketSchema),
-    defaultValues: {
-      name: '',
-      model: '',
-      manufacturer: '',
-      yearBuilt: new Date().getFullYear(),
-      height: 0,
-      diameter: 0,
-      mass: 0,
-      fuelType: '',
-      maxThrust: 0,
-      capacity: 0,
-      description: '',
-    },
+    defaultValues: DEFAULT_ROCKET_FORM_VALUES,
     mode: 'onBlur',
   });
 
@@ -75,19 +77,7 @@ const App: React.FC = () => {
   // Add another useEffect to handle initial form state
   React.useEffect(() => {
     // Clear form data when the component mounts
-    methods.reset({
-      name: '',
-      model: '',
-      manufacturer: '',
-      yearBuilt: new Date().getFullYear(),
-      height: 0,
-      diameter: 0,
-      mass: 0,
-      fuelType: '',
-      maxThrust: 0,
-      capacity: 0,
-      description: '',
-    });
+    methods.reset(DEFAULT_ROCKET_FORM_VALUES);
   }, [methods]); // This will run only once on component mount
 
   const handleNextStep = () => {
@@ -156,20 +146,8 @@ const App: React.FC = () => {
     // First cancel any ongoing editing
     cancelEditing();
     
-    // Reset the form with explicit default values
-    methods.reset({
-      name: '',
-      model: '',
-      manufacturer: '',
-      yearBuilt: new Date().getFullYear(),
-      height: 0,
-      diameter: 0,
-      mass: 0,
-      fuelType: '',
-      maxThrust: 0,
-      capacity: 0,
-      description: '',
-    });
+    // Reset the form with default values
+    methods.reset(DEFAULT_ROCKET_FORM_VALUES);
     
     // Then navigate to the first page
     setCurrentStep(FormStep.Page1);
@@ -177,21 +155,10 @@ const App: React.FC = () => {
 
   const handleCancelEdit = () => {
     cancelEditing();
-    methods.reset({
-      name: '',
-      model: '',
-      manufacturer: '',
-      yearBuilt: new Date().getFullYear(),
-      height: 0,
-      diameter: 0,
-      mass: 0,
-      fuelType: '',
-      maxThrust: 0,
-      capacity: 0,
-      description: '',
-    });
+    methods.reset(DEFAULT_ROCKET_FORM_VALUES);
     setCurrentStep(FormStep.List);
   };
+
 
   const renderCurrentStep = () => {
     switch (currentStep) {
@@ -216,19 +183,7 @@ const App: React.FC = () => {
               status={submissionStatus}
               onContinue={() => {
                 // Reset the form before navigating to the list view
-                methods.reset({
-                  name: '',
-                  model: '',
-                  manufacturer: '',
-                  yearBuilt: new Date().getFullYear(),
-                  height: 0,
-                  diameter: 0,
-                  mass: 0,
-                  fuelType: '',
-                  maxThrust: 0,
-                  capacity: 0,
-                  description: '',
-                });
+                methods.reset(DEFAULT_ROCKET_FORM_VALUES);
                 setCurrentStep(FormStep.List);
               }}
               resetStatus={resetSubmissionStatus}
