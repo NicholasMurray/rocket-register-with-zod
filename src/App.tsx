@@ -9,6 +9,7 @@ import { RocketFormPage3 } from './components/RocketForm/RocketFormPage3';
 import { RocketFormSummary } from './components/RocketForm/RocketFormSummary';
 import { RocketsList } from './components/RocketsList/RocketsList';
 import { Button } from './components/ui/Button';
+import { ErrorSummary } from './components/ui/ErrorSummary';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from './store/store';
 import { startEditing, cancelEditing } from './store/rocketSlice';
@@ -58,7 +59,7 @@ const App: React.FC = () => {
   const methods = useForm<RocketFormValues>({
     resolver: zodResolver(rocketSchema),
     defaultValues: DEFAULT_ROCKET_FORM_VALUES,
-    mode: 'onBlur',
+    mode: 'onSubmit', // Changed from 'onBlur' to 'onSubmit'
   });
 
   // Reset form and update with editing rocket data when it changes
@@ -88,26 +89,43 @@ const App: React.FC = () => {
     methods.reset(DEFAULT_ROCKET_FORM_VALUES);
   }, [methods]); // This will run only once on component mount
 
-  const handleNextStep = () => {
+  // Get page-specific fields for validation
+  const getFieldsForCurrentStep = () => {
     switch (currentStep) {
       case FormStep.Page1:
-        methods.trigger(['name', 'model', 'manufacturer', 'yearBuilt']).then(isValid => {
-          if (isValid) setCurrentStep(FormStep.Page2);
-        });
-        break;
+        return ['name', 'model', 'manufacturer', 'yearBuilt'];
       case FormStep.Page2:
-        methods.trigger(['height', 'diameter', 'mass', 'fuelType']).then(isValid => {
-          if (isValid) setCurrentStep(FormStep.Page3);
-        });
-        break;
+        return ['height', 'diameter', 'mass', 'fuelType'];
       case FormStep.Page3:
-        methods.trigger(['maxThrust', 'capacity']).then(isValid => {
-          if (isValid) setCurrentStep(FormStep.Summary);
-        });
-        break;
+        return ['maxThrust', 'capacity', 'description'];
       default:
-        break;
+        return [];
     }
+  };
+
+  // Handle next button click - validate the current page's fields
+  const handleNextStep = async () => {
+    const fieldsToValidate = getFieldsForCurrentStep();
+    
+    // This will set errors and return false if validation fails
+    const isValid = await methods.trigger(fieldsToValidate);
+    
+    if (isValid) {
+      switch (currentStep) {
+        case FormStep.Page1:
+          setCurrentStep(FormStep.Page2);
+          break;
+        case FormStep.Page2:
+          setCurrentStep(FormStep.Page3);
+          break;
+        case FormStep.Page3:
+          setCurrentStep(FormStep.Summary);
+          break;
+        default:
+          break;
+      }
+    }
+    // If not valid, errors will be displayed but we stay on current page
   };
 
   const handlePreviousStep = () => {
@@ -228,25 +246,58 @@ const App: React.FC = () => {
     setSubmissionStatus('idle');
   };
 
+  // Get relevant errors for the current step to display in summary
+  const getCurrentStepErrors = () => {
+    const allErrors = methods.formState.errors;
+    const relevantFields = getFieldsForCurrentStep();
+    
+    const stepErrors = {};
+    relevantFields.forEach(field => {
+      if (allErrors[field]) {
+        stepErrors[field] = allErrors[field];
+      }
+    });
+    
+    return stepErrors;
+  };
+
   const renderCurrentStep = () => {
+    // Get errors for current step to pass to error summary
+    const currentStepErrors = getCurrentStepErrors();
+    
     switch (currentStep) {
       case FormStep.Page1:
-        return <RocketFormPage1 
-          onNext={handleNextStep}
-          onCancel={handleCancelForm}
-        />;
+        return (
+          <>
+            <ErrorSummary errors={currentStepErrors} />
+            <RocketFormPage1 
+              onNext={handleNextStep}
+              onCancel={handleCancelForm}
+            />
+          </>
+        );
       case FormStep.Page2:
-        return <RocketFormPage2 
-          onNext={handleNextStep} 
-          onPrevious={handlePreviousStep}
-          onCancel={handleCancelForm}
-        />;
+        return (
+          <>
+            <ErrorSummary errors={currentStepErrors} />
+            <RocketFormPage2 
+              onNext={handleNextStep} 
+              onPrevious={handlePreviousStep}
+              onCancel={handleCancelForm}
+            />
+          </>
+        );
       case FormStep.Page3:
-        return <RocketFormPage3 
-          onNext={handleNextStep} 
-          onPrevious={handlePreviousStep}
-          onCancel={handleCancelForm}
-        />;
+        return (
+          <>
+            <ErrorSummary errors={currentStepErrors} />
+            <RocketFormPage3 
+              onNext={handleNextStep} 
+              onPrevious={handlePreviousStep}
+              onCancel={handleCancelForm}
+            />
+          </>
+        );
       case FormStep.Summary:
         return (
           <RocketFormSummary 

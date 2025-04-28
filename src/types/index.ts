@@ -14,3 +14,11 @@ export type Rocket = {
 };
 
 export type RocketFormData = Omit<Rocket, 'id'>;
+
+// Type for error object
+export type FormErrors = {
+  [key: string]: { 
+    message?: string;
+    type?: string;
+  }
+};
