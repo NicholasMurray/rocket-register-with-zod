@@ -9,11 +9,22 @@ interface RocketFormPage3Props {
   onNext: () => void;
   onPrevious: () => void;
   onCancel: () => void;
+  onFieldChange?: (fieldName: string) => Promise<boolean>;
 }
 
-export const RocketFormPage3: React.FC<RocketFormPage3Props> = ({ onNext, onPrevious, onCancel }) => {
+export const RocketFormPage3: React.FC<RocketFormPage3Props> = ({ onNext, onPrevious, onCancel, onFieldChange }) => {
   const { register, formState: { errors } } = useFormContext<RocketFormValues>();
   
+  // Handler for field changes
+  const handleFieldChange = (fieldName: string) => {
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      if (onFieldChange) {
+        // Use setTimeout to ensure React has processed the state change
+        setTimeout(() => onFieldChange(fieldName), 0);
+      }
+    };
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Performance & Additional Details</h2>
@@ -30,6 +41,10 @@ export const RocketFormPage3: React.FC<RocketFormPage3Props> = ({ onNext, onPrev
           {...register('maxThrust')}
           error={!!errors.maxThrust}
           placeholder="Enter maximum thrust in kilonewtons"
+          onChange={(e) => {
+            register('maxThrust').onChange(e);
+            handleFieldChange('maxThrust')(e);
+          }}
         />
       </FormField>
       
@@ -44,6 +59,10 @@ export const RocketFormPage3: React.FC<RocketFormPage3Props> = ({ onNext, onPrev
           {...register('capacity')}
           error={!!errors.capacity}
           placeholder="Enter capacity"
+          onChange={(e) => {
+            register('capacity').onChange(e);
+            handleFieldChange('capacity')(e);
+          }}
         />
       </FormField>
       
@@ -62,6 +81,10 @@ export const RocketFormPage3: React.FC<RocketFormPage3Props> = ({ onNext, onPrev
           `}
           rows={4}
           placeholder="Enter description and additional details"
+          onChange={(e) => {
+            register('description').onChange(e);
+            handleFieldChange('description')(e);
+          }}
         />
       </FormField>
       

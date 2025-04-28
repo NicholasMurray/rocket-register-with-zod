@@ -8,73 +8,93 @@ import { RocketFormValues } from '../../schemas/rocketSchema';
 interface RocketFormPage1Props {
   onNext: () => void;
   onCancel: () => void;
+  onFieldChange?: (fieldName: string) => Promise<boolean>; // New prop for validating fields
 }
 
-export const RocketFormPage1: React.FC<RocketFormPage1Props> = ({ onNext, onCancel }) => {
+export const RocketFormPage1: React.FC<RocketFormPage1Props> = ({ 
+  onNext, 
+  onCancel,
+  onFieldChange
+}) => {
   const { register, formState: { errors } } = useFormContext<RocketFormValues>();
-  
+
+  // Handler for field changes
+  const handleFieldChange = (fieldName: string) => {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (onFieldChange) {
+        // Use setTimeout to ensure React has processed the state change
+        setTimeout(() => onFieldChange(fieldName), 0);
+      }
+    };
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Basic Information</h2>
-      
-      <FormField 
-        label="Rocket Name" 
-        htmlFor="name" 
+      <FormField
+        label="Rocket Name"
+        htmlFor="name"
         error={errors.name}
       >
-        <Input 
-          id="name"
+        <Input
+          type="text"
           {...register('name')}
-          error={!!errors.name}
-          placeholder="Enter rocket name"
+          onChange={(e) => {
+            register('name').onChange(e); // Keep the original onChange handler
+            handleFieldChange('name')(e);  // Add our validation
+          }}
         />
       </FormField>
       
-      <FormField 
-        label="Model" 
-        htmlFor="model" 
+      <FormField
+        label="Model"
+        htmlFor="model"
         error={errors.model}
       >
-        <Input 
-          id="model"
+        <Input
+          type="text"
           {...register('model')}
-          error={!!errors.model}
-          placeholder="Enter model designation"
+          onChange={(e) => {
+            register('model').onChange(e);
+            handleFieldChange('model')(e);
+          }}
         />
       </FormField>
       
-      <FormField 
-        label="Manufacturer" 
-        htmlFor="manufacturer" 
+      <FormField
+        label="Manufacturer"
+        htmlFor="manufacturer"
         error={errors.manufacturer}
       >
-        <Input 
-          id="manufacturer"
+        <Input
+          type="text"
           {...register('manufacturer')}
-          error={!!errors.manufacturer}
-          placeholder="Enter manufacturer name"
+          onChange={(e) => {
+            register('manufacturer').onChange(e);
+            handleFieldChange('manufacturer')(e);
+          }}
         />
       </FormField>
       
-      <FormField 
-        label="Year Built" 
-        htmlFor="yearBuilt" 
+      <FormField
+        label="Year Built"
+        htmlFor="yearBuilt"
         error={errors.yearBuilt}
       >
-        <Input 
-          id="yearBuilt"
+        <Input
           type="number"
-          {...register('yearBuilt')}
-          error={!!errors.yearBuilt}
-          placeholder="Enter year built"
+          {...register('yearBuilt', { valueAsNumber: true })}
+          onChange={(e) => {
+            register('yearBuilt', { valueAsNumber: true }).onChange(e);
+            handleFieldChange('yearBuilt')(e);
+          }}
         />
       </FormField>
       
-      <div className="flex justify-end">
+      <div className="flex justify-end space-x-3 pt-6">
         <Button variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
-        <Button onClick={onNext}>
+        <Button variant="primary" onClick={onNext}>
           Next
         </Button>
       </div>

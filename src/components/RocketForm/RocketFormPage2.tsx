@@ -10,11 +10,27 @@ interface RocketFormPage2Props {
   onNext: () => void;
   onPrevious: () => void;
   onCancel: () => void;
+  onFieldChange?: (fieldName: string) => Promise<boolean>; // New prop for validating fields
 }
 
-export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({ onNext, onPrevious, onCancel }) => {
+export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({ 
+  onNext, 
+  onPrevious, 
+  onCancel,
+  onFieldChange 
+}) => {
   const { register, formState: { errors } } = useFormContext<RocketFormValues>();
   
+  // Handler for field changes
+  const handleFieldChange = (fieldName: string) => {
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      if (onFieldChange) {
+        // Use setTimeout to ensure React has processed the state change
+        setTimeout(() => onFieldChange(fieldName), 0);
+      }
+    };
+  };
+
   const fuelOptions = [
     { value: 'LOX/RP-1', label: 'LOX/RP-1 (Liquid Oxygen & Refined Petroleum)' },
     { value: 'LOX/LH2', label: 'LOX/LH2 (Liquid Oxygen & Liquid Hydrogen)' },
@@ -24,65 +40,81 @@ export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({ onNext, onPrev
     { value: 'Hybrid', label: 'Hybrid' },
     { value: 'Other', label: 'Other' },
   ];
-  
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Physical Specifications</h2>
       
-      <FormField 
-        label="Height (meters)" 
-        htmlFor="height" 
+      <FormField
+        label="Height (meters)"
+        htmlFor="height"
         error={errors.height}
       >
-        <Input 
+        <Input
           id="height"
           type="number"
           step="0.01"
           {...register('height')}
           error={!!errors.height}
           placeholder="Enter height in meters"
+          onChange={(e) => {
+            register('height').onChange(e);
+            handleFieldChange('height')(e);
+          }}
         />
       </FormField>
       
-      <FormField 
-        label="Diameter (meters)" 
-        htmlFor="diameter" 
+      <FormField
+        label="Diameter (meters)"
+        htmlFor="diameter"
         error={errors.diameter}
       >
-        <Input 
+        <Input
           id="diameter"
           type="number"
           step="0.01"
           {...register('diameter')}
           error={!!errors.diameter}
           placeholder="Enter diameter in meters"
+          onChange={(e) => {
+            register('diameter').onChange(e);
+            handleFieldChange('diameter')(e);
+          }}
         />
       </FormField>
       
-      <FormField 
-        label="Mass (kg)" 
-        htmlFor="mass" 
+      <FormField
+        label="Mass (kg)"
+        htmlFor="mass"
         error={errors.mass}
       >
-        <Input 
+        <Input
           id="mass"
           type="number"
           {...register('mass')}
           error={!!errors.mass}
           placeholder="Enter mass in kilograms"
+          onChange={(e) => {
+            register('mass').onChange(e);
+            handleFieldChange('mass')(e);
+          }}
         />
       </FormField>
       
-      <FormField 
-        label="Fuel Type" 
-        htmlFor="fuelType" 
+      <FormField
+        label="Fuel Type"
+        htmlFor="fuelType"
         error={errors.fuelType}
       >
-        <Select 
+        <Select
           id="fuelType"
           options={fuelOptions}
           {...register('fuelType')}
           error={!!errors.fuelType}
+          onChange={(e) => {
+            register('fuelType').onChange(e);
+            handleFieldChange('fuelType')(e);
+          }}
         />
       </FormField>
       
