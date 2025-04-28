@@ -6,7 +6,7 @@ import { RocketFormPage1 } from './components/RocketForm/RocketFormPage1';
 import { RocketFormPage2 } from './components/RocketForm/RocketFormPage2';
 import { RocketFormPage3 } from './components/RocketForm/RocketFormPage3';
 import { RocketFormSummary } from './components/RocketForm/RocketFormSummary';
-import { RocketFormSuccess } from './components/RocketForm/RocketFormSuccess';
+// The RocketFormSuccess component is no longer needed as a separate view
 import { RocketsList } from './components/RocketsList/RocketsList';
 import { useRockets } from './hooks/useRockets';
 import { Button } from './components/ui/Button';
@@ -30,7 +30,6 @@ enum FormStep {
   Page2,
   Page3,
   Summary,
-  Success,
   List
 }
 
@@ -134,13 +133,13 @@ const App: React.FC = () => {
         await addRocket(values);
       }
       
-      // Only move to success page after the async operation completes
-      // and the status has been set to success
-      setCurrentStep(FormStep.Success);
+      // After successful submission, go straight to list view
+      setCurrentStep(FormStep.List);
       methods.reset();
     } catch (error) {
       console.error('Error submitting form:', error);
       // The status will already be set to 'error' in the hook
+      setCurrentStep(FormStep.List); // Also navigate to list to show the error message
     }
   };
 
@@ -215,17 +214,6 @@ const App: React.FC = () => {
             onCancel={handleCancelForm}
           />
         );
-      case FormStep.Success:
-        return (
-          <RocketFormSuccess 
-            status={submissionStatus}
-            onContinue={() => {
-              methods.reset(DEFAULT_ROCKET_FORM_VALUES);
-              setCurrentStep(FormStep.List);
-            }}
-            resetStatus={resetSubmissionStatus}
-          />
-        );
       case FormStep.List:
         return (
           <RocketsList 
@@ -233,6 +221,8 @@ const App: React.FC = () => {
             onEdit={startEditing}
             onDelete={deleteRocket}
             onAddNew={handleAddNew}
+            submissionStatus={submissionStatus}
+            resetStatus={resetSubmissionStatus}
           />
         );
       default:
@@ -248,7 +238,7 @@ const App: React.FC = () => {
            editingRocket ? 'Edit Rocket' : 'Register New Rocket'}
         </h1>
         
-        {currentStep !== FormStep.List && currentStep !== FormStep.Success && (
+        {currentStep !== FormStep.List && (
           <div className="mb-6">
             <div className="flex items-center justify-between">
               {[FormStep.Page1, FormStep.Page2, FormStep.Page3, FormStep.Summary].map((step, index) => (
