@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { rocketSchema, RocketFormValues } from './schemas/rocketSchema';
+import { Rocket, RocketFormData } from './types';
 import { RocketFormPage1 } from './components/RocketForm/RocketFormPage1';
 import { RocketFormPage2 } from './components/RocketForm/RocketFormPage2';
 import { RocketFormPage3 } from './components/RocketForm/RocketFormPage3';
@@ -131,12 +132,28 @@ const App: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      const values = methods.getValues();
+      const formValues = methods.getValues();
+      
+      // Transform to ensure all required fields are present
+      const rocketData: RocketFormData = {
+        name: formValues.name,
+        model: formValues.model,
+        manufacturer: formValues.manufacturer,
+        yearBuilt: formValues.yearBuilt,
+        height: formValues.height,
+        diameter: formValues.diameter,
+        mass: formValues.mass,
+        fuelType: formValues.fuelType,
+        maxThrust: formValues.maxThrust,
+        capacity: formValues.capacity,
+        // Ensure description is always a string (not undefined)
+        description: formValues.description || ''
+      };
       
       if (editingRocket) {
-        await updateRocket({ id: editingRocket.id, data: values }).unwrap();
+        await updateRocket({ id: editingRocket.id, data: rocketData }).unwrap();
       } else {
-        await addRocket(values).unwrap();
+        await addRocket(rocketData).unwrap();
       }
       
       // Set success status and navigate to list view
@@ -194,11 +211,11 @@ const App: React.FC = () => {
     setShowCancelConfirmation(false);
   };
 
-  const handleStartEditing = (rocket) => {
+  const handleStartEditing = (rocket: Rocket) => {
     dispatch(startEditing(rocket));
   };
 
-  const handleDeleteRocket = async (id) => {
+  const handleDeleteRocket = async (id: string) => {
     try {
       await deleteRocket(id).unwrap();
       // No need to update UI state as the query will automatically refresh
