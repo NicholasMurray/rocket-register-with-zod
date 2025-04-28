@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { rocketSchema, RocketFormValues } from './schemas/rocketSchema';
@@ -6,10 +6,17 @@ import { RocketFormPage1 } from './components/RocketForm/RocketFormPage1';
 import { RocketFormPage2 } from './components/RocketForm/RocketFormPage2';
 import { RocketFormPage3 } from './components/RocketForm/RocketFormPage3';
 import { RocketFormSummary } from './components/RocketForm/RocketFormSummary';
-// The RocketFormSuccess component is no longer needed as a separate view
 import { RocketsList } from './components/RocketsList/RocketsList';
-import { useRockets } from './hooks/useRockets';
 import { Button } from './components/ui/Button';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from './store/store';
+import { startEditing, cancelEditing } from './store/rocketSlice';
+import { 
+  useGetRocketsQuery, 
+  useAddRocketMutation, 
+  useUpdateRocketMutation, 
+  useDeleteRocketMutation 
+} from './store/rocketApi';
 
 const DEFAULT_ROCKET_FORM_VALUES: RocketFormValues = {
   name: '',
@@ -36,17 +43,16 @@ enum FormStep {
 const App: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<FormStep>(FormStep.List);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
-  const { 
-    rockets, 
-    editingRocket, 
-    submissionStatus,
-    addRocket, 
-    updateRocket, 
-    deleteRocket, 
-    startEditing, 
-    cancelEditing, 
-    resetSubmissionStatus
-  } = useRockets();
+  const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  
+  const dispatch = useDispatch();
+  const editingRocket = useSelector((state: RootState) => state.rocket.editingRocket);
+  
+  // RTK Query hooks
+  const { data: rockets = [] } = useGetRocketsQuery();
+  const [addRocket, { isLoading: isAdding }] = useAddRocketMutation();
+  const [updateRocket, { isLoading: isUpdating }] = useUpdateRocketMutation();
+  const [deleteRocket] = useDeleteRocketMutation();
 
   const methods = useForm<RocketFormValues>({
     resolver: zodResolver(rocketSchema),
@@ -55,7 +61,7 @@ const App: React.FC = () => {
   });
 
   // Reset form and update with editing rocket data when it changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (editingRocket) {
       // When editing a rocket, populate the form with its data
       methods.reset({
@@ -76,7 +82,7 @@ const App: React.FC = () => {
   }, [editingRocket, methods]);
 
   // Add another useEffect to handle initial form state
-  React.useEffect(() => {
+  useEffect(() => {
     // Clear form data when the component mounts
     methods.reset(DEFAULT_ROCKET_FORM_VALUES);
   }, [methods]); // This will run only once on component mount
@@ -128,24 +134,26 @@ const App: React.FC = () => {
       const values = methods.getValues();
       
       if (editingRocket) {
-        await updateRocket(editingRocket.id, values);
+        await updateRocket({ id: editingRocket.id, data: values }).unwrap();
       } else {
-        await addRocket(values);
+        await addRocket(values).unwrap();
       }
       
-      // After successful submission, go straight to list view
+      // Set success status and navigate to list view
+      setSubmissionStatus('success');
+      methods.reset(DEFAULT_ROCKET_FORM_VALUES);
+      dispatch(cancelEditing());
       setCurrentStep(FormStep.List);
-      methods.reset();
     } catch (error) {
       console.error('Error submitting form:', error);
-      // The status will already be set to 'error' in the hook
-      setCurrentStep(FormStep.List); // Also navigate to list to show the error message
+      setSubmissionStatus('error');
+      setCurrentStep(FormStep.List);
     }
   };
 
   const handleAddNew = () => {
     // First cancel any ongoing editing
-    cancelEditing();
+    dispatch(cancelEditing());
     
     // Reset the form with default values
     methods.reset(DEFAULT_ROCKET_FORM_VALUES);
@@ -176,7 +184,7 @@ const App: React.FC = () => {
   // Function to cancel without confirmation
   const cancelFormWithoutConfirmation = () => {
     methods.reset(DEFAULT_ROCKET_FORM_VALUES);
-    cancelEditing();
+    dispatch(cancelEditing());
     setCurrentStep(FormStep.List);
     setShowCancelConfirmation(false);
   };
@@ -184,6 +192,23 @@ const App: React.FC = () => {
   // Function to handle cancel dialog "No" button
   const handleCancelDialogNo = () => {
     setShowCancelConfirmation(false);
+  };
+
+  const handleStartEditing = (rocket) => {
+    dispatch(startEditing(rocket));
+  };
+
+  const handleDeleteRocket = async (id) => {
+    try {
+      await deleteRocket(id).unwrap();
+      // No need to update UI state as the query will automatically refresh
+    } catch (error) {
+      console.error('Failed to delete rocket:', error);
+    }
+  };
+
+  const resetSubmissionStatus = () => {
+    setSubmissionStatus('idle');
   };
 
   const renderCurrentStep = () => {
@@ -218,8 +243,8 @@ const App: React.FC = () => {
         return (
           <RocketsList 
             rockets={rockets}
-            onEdit={startEditing}
-            onDelete={deleteRocket}
+            onEdit={handleStartEditing}
+            onDelete={handleDeleteRocket}
             onAddNew={handleAddNew}
             submissionStatus={submissionStatus}
             resetStatus={resetSubmissionStatus}
@@ -229,6 +254,9 @@ const App: React.FC = () => {
         return null;
     }
   };
+
+  // Determine if we're currently in a loading state
+  const isLoading = isAdding || isUpdating;
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
@@ -272,8 +300,23 @@ const App: React.FC = () => {
           {renderCurrentStep()}
         </FormProvider>
       
-      {/* Add cancel confirmation dialog */}
-      {showCancelConfirmation && (
+        {/* Add loading indicator */}
+        {isLoading && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-25 flex items-center justify-center z-40">
+            <div className="bg-white p-4 rounded-lg shadow-lg">
+              <div className="flex items-center">
+                <svg className="animate-spin h-5 w-5 mr-3 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <span>Processing...</span>
+              </div>
+            </div>
+          </div>
+        )}
+      
+        {/* Add cancel confirmation dialog */}
+        {showCancelConfirmation && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
               <h3 className="text-lg font-medium mb-4">Discard Changes?</h3>
