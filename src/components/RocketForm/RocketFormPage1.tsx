@@ -8,22 +8,22 @@ import { RocketFormValues } from '../../schemas/rocketSchema';
 interface RocketFormPage1Props {
   onNext: () => void;
   onCancel: () => void;
-  onFieldChange?: (fieldName: string) => Promise<boolean>; // New prop for validating fields
+  onFieldChange?: (fieldName: string) => void; // Changed to void return type
 }
 
-export const RocketFormPage1: React.FC<RocketFormPage1Props> = ({ 
-  onNext, 
+export const RocketFormPage1: React.FC<RocketFormPage1Props> = ({
+  onNext,
   onCancel,
   onFieldChange
 }) => {
   const { register, formState: { errors } } = useFormContext<RocketFormValues>();
 
-  // Handler for field changes
+  // Handler for field changes - now just clears the error
   const handleFieldChange = (fieldName: string) => {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
       if (onFieldChange) {
-        // Use setTimeout to ensure React has processed the state change
-        setTimeout(() => onFieldChange(fieldName), 0);
+        // Clear error when user makes any change to the field
+        onFieldChange(fieldName);
       }
     };
   };
@@ -40,11 +40,11 @@ export const RocketFormPage1: React.FC<RocketFormPage1Props> = ({
           {...register('name')}
           onChange={(e) => {
             register('name').onChange(e); // Keep the original onChange handler
-            handleFieldChange('name')(e);  // Add our validation
+            handleFieldChange('name')(e); // Clear validation error
           }}
         />
       </FormField>
-      
+
       <FormField
         label="Model"
         htmlFor="model"
@@ -59,7 +59,7 @@ export const RocketFormPage1: React.FC<RocketFormPage1Props> = ({
           }}
         />
       </FormField>
-      
+
       <FormField
         label="Manufacturer"
         htmlFor="manufacturer"
@@ -74,7 +74,7 @@ export const RocketFormPage1: React.FC<RocketFormPage1Props> = ({
           }}
         />
       </FormField>
-      
+
       <FormField
         label="Year Built"
         htmlFor="yearBuilt"
@@ -89,7 +89,7 @@ export const RocketFormPage1: React.FC<RocketFormPage1Props> = ({
           }}
         />
       </FormField>
-      
+
       <div className="flex justify-end space-x-3 pt-6">
         <Button variant="secondary" onClick={onCancel}>
           Cancel

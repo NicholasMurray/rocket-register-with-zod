@@ -59,8 +59,8 @@ const App: React.FC = () => {
   const methods = useForm<RocketFormValues>({
     resolver: zodResolver(rocketSchema),
     defaultValues: DEFAULT_ROCKET_FORM_VALUES,
-    mode: 'onSubmit', // Keep original mode
-    reValidateMode: 'onChange', // But revalidate on change
+    mode: 'onSubmit', // Only validate on submit
+    reValidateMode: 'onSubmit', // Only revalidate on submit
   });
 
   // Reset form and update with editing rocket data when it changes
@@ -262,17 +262,15 @@ const App: React.FC = () => {
     return stepErrors;
   };
 
-  // Add this function to validate fields individually when they change
-  const validateField = (fieldName: string) => {
-    return methods.trigger(fieldName);
+  // Function to clear validation errors for a specific field
+  const clearFieldError = (fieldName: string) => {
+    // Use clearErrors to remove error for that field
+    methods.clearErrors(fieldName);
   };
 
   const renderCurrentStep = () => {
     // Get errors for current step to pass to error summary
     const currentStepErrors = getCurrentStepErrors();
-    
-    // This is a prop we'll pass to form components to handle field validation on change
-    const onFieldChange = validateField;
     
     switch (currentStep) {
       case FormStep.Page1:
@@ -282,7 +280,7 @@ const App: React.FC = () => {
             <RocketFormPage1 
               onNext={handleNextStep}
               onCancel={handleCancelForm}
-              onFieldChange={onFieldChange}
+              onFieldChange={clearFieldError}
             />
           </>
         );
@@ -294,7 +292,7 @@ const App: React.FC = () => {
               onNext={handleNextStep} 
               onPrevious={handlePreviousStep}
               onCancel={handleCancelForm}
-              onFieldChange={onFieldChange}
+              onFieldChange={clearFieldError}
             />
           </>
         );
@@ -306,7 +304,7 @@ const App: React.FC = () => {
               onNext={handleNextStep} 
               onPrevious={handlePreviousStep}
               onCancel={handleCancelForm}
-              onFieldChange={onFieldChange}
+              onFieldChange={clearFieldError}
             />
           </>
         );

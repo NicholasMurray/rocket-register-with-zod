@@ -10,23 +10,23 @@ interface RocketFormPage2Props {
   onNext: () => void;
   onPrevious: () => void;
   onCancel: () => void;
-  onFieldChange?: (fieldName: string) => Promise<boolean>; // New prop for validating fields
+  onFieldChange?: (fieldName: string) => void; // Updated to void return type
 }
 
-export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({ 
-  onNext, 
-  onPrevious, 
+export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({
+  onNext,
+  onPrevious,
   onCancel,
-  onFieldChange 
+  onFieldChange
 }) => {
   const { register, formState: { errors } } = useFormContext<RocketFormValues>();
-  
-  // Handler for field changes
+
+  // Handler for field changes - now just clears the error
   const handleFieldChange = (fieldName: string) => {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       if (onFieldChange) {
-        // Use setTimeout to ensure React has processed the state change
-        setTimeout(() => onFieldChange(fieldName), 0);
+        // Clear error when user makes any change to the field
+        onFieldChange(fieldName);
       }
     };
   };
@@ -44,7 +44,6 @@ export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Physical Specifications</h2>
-      
       <FormField
         label="Height (meters)"
         htmlFor="height"
@@ -63,7 +62,7 @@ export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({
           }}
         />
       </FormField>
-      
+
       <FormField
         label="Diameter (meters)"
         htmlFor="diameter"
@@ -82,7 +81,7 @@ export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({
           }}
         />
       </FormField>
-      
+
       <FormField
         label="Mass (kg)"
         htmlFor="mass"
@@ -100,7 +99,7 @@ export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({
           }}
         />
       </FormField>
-      
+
       <FormField
         label="Fuel Type"
         htmlFor="fuelType"
@@ -117,7 +116,7 @@ export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({
           }}
         />
       </FormField>
-      
+
       <div className="flex justify-between">
         <div>
           <Button variant="secondary" onClick={onPrevious} className="mr-2">

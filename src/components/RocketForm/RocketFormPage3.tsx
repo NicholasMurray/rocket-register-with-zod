@@ -9,18 +9,23 @@ interface RocketFormPage3Props {
   onNext: () => void;
   onPrevious: () => void;
   onCancel: () => void;
-  onFieldChange?: (fieldName: string) => Promise<boolean>;
+  onFieldChange?: (fieldName: string) => void; // Updated to void return type
 }
 
-export const RocketFormPage3: React.FC<RocketFormPage3Props> = ({ onNext, onPrevious, onCancel, onFieldChange }) => {
+export const RocketFormPage3: React.FC<RocketFormPage3Props> = ({ 
+  onNext, 
+  onPrevious, 
+  onCancel, 
+  onFieldChange 
+}) => {
   const { register, formState: { errors } } = useFormContext<RocketFormValues>();
-  
-  // Handler for field changes
+
+  // Handler for field changes - now just clears the error
   const handleFieldChange = (fieldName: string) => {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       if (onFieldChange) {
-        // Use setTimeout to ensure React has processed the state change
-        setTimeout(() => onFieldChange(fieldName), 0);
+        // Clear error when user makes any change to the field
+        onFieldChange(fieldName);
       }
     };
   };
@@ -28,13 +33,12 @@ export const RocketFormPage3: React.FC<RocketFormPage3Props> = ({ onNext, onPrev
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Performance & Additional Details</h2>
-      
-      <FormField 
-        label="Maximum Thrust (kN)" 
-        htmlFor="maxThrust" 
+      <FormField
+        label="Maximum Thrust (kN)"
+        htmlFor="maxThrust"
         error={errors.maxThrust}
       >
-        <Input 
+        <Input
           id="maxThrust"
           type="number"
           step="0.01"
@@ -47,13 +51,13 @@ export const RocketFormPage3: React.FC<RocketFormPage3Props> = ({ onNext, onPrev
           }}
         />
       </FormField>
-      
-      <FormField 
-        label="Passenger/Payload Capacity" 
-        htmlFor="capacity" 
+
+      <FormField
+        label="Passenger/Payload Capacity"
+        htmlFor="capacity"
         error={errors.capacity}
       >
-        <Input 
+        <Input
           id="capacity"
           type="number"
           {...register('capacity')}
@@ -65,13 +69,13 @@ export const RocketFormPage3: React.FC<RocketFormPage3Props> = ({ onNext, onPrev
           }}
         />
       </FormField>
-      
-      <FormField 
-        label="Description" 
-        htmlFor="description" 
+
+      <FormField
+        label="Description"
+        htmlFor="description"
         error={errors.description}
       >
-        <textarea 
+        <textarea
           id="description"
           {...register('description')}
           className={`
@@ -87,7 +91,7 @@ export const RocketFormPage3: React.FC<RocketFormPage3Props> = ({ onNext, onPrev
           }}
         />
       </FormField>
-      
+
       <div className="flex justify-between">
         <div>
           <Button variant="secondary" onClick={onPrevious} className="mr-2">
