@@ -46,6 +46,8 @@ const App: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<FormStep>(FormStep.List);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  // Add new state to track operation type
+  const [operationType, setOperationType] = useState<'create' | 'update' | 'none'>('none');
   
   const dispatch = useDispatch();
   const editingRocket = useSelector((state: RootState) => state.rocket.editingRocket);
@@ -171,9 +173,12 @@ const App: React.FC = () => {
       
       if (editingRocket) {
         await updateRocket({ id: editingRocket.id, data: rocketData }).unwrap();
+        setOperationType('update');
       } else {
         await addRocket(rocketData).unwrap();
+        setOperationType('create');
       }
+      
       
       // Set success status and navigate to list view
       setSubmissionStatus('success');
@@ -182,6 +187,8 @@ const App: React.FC = () => {
       setCurrentStep(FormStep.List);
     } catch (error) {
       console.error('Error submitting form:', error);
+      // Also set the operation type for error messages
+      setOperationType(editingRocket ? 'update' : 'create');
       setSubmissionStatus('error');
       setCurrentStep(FormStep.List);
     }
@@ -245,6 +252,7 @@ const App: React.FC = () => {
 
   const resetSubmissionStatus = () => {
     setSubmissionStatus('idle');
+    setOperationType('none');
   };
 
   // Get relevant errors for the current step to display in summary
@@ -326,7 +334,8 @@ const App: React.FC = () => {
             onAddNew={handleAddNew}
             submissionStatus={submissionStatus}
             resetStatus={resetSubmissionStatus}
-          />
+            operationType={operationType} // Pass the new prop
+        />
         );
       default:
         return null;

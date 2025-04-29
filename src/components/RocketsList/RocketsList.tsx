@@ -11,6 +11,7 @@ interface RocketsListProps {
   onAddNew: () => void;
   submissionStatus: 'idle' | 'success' | 'error';
   resetStatus: () => void;
+  operationType: 'create' | 'update' | 'none';  // New prop to track the operation type
 }
 
 export const RocketsList: React.FC<RocketsListProps> = ({
@@ -20,19 +21,34 @@ export const RocketsList: React.FC<RocketsListProps> = ({
   onAddNew,
   submissionStatus,
   resetStatus,
+  operationType,
 }) => {
-  // Determine notification content based on status
+  // Determine notification content based on status and operation type
   const getNotificationContent = () => {
     if (submissionStatus === 'success') {
-      return {
-        message: 'Rocket Registration Successful!',
-        description: 'Your rocket has been registered successfully in our database.'
-      };
+      if (operationType === 'update') {
+        return {
+          message: 'Rocket Update Successful!',
+          description: 'Your rocket information has been updated successfully in our database.'
+        };
+      } else {
+        return {
+          message: 'Rocket Registration Successful!',
+          description: 'Your rocket has been registered successfully in our database.'
+        };
+      }
     } else {
-      return {
-        message: 'Registration Failed',
-        description: 'There was an error registering your rocket. Please try again.'
-      };
+      if (operationType === 'update') {
+        return {
+          message: 'Update Failed',
+          description: 'There was an error updating your rocket. Please try again.'
+        };
+      } else {
+        return {
+          message: 'Registration Failed',
+          description: 'There was an error registering your rocket. Please try again.'
+        };
+      }
     }
   };
 
@@ -46,12 +62,12 @@ export const RocketsList: React.FC<RocketsListProps> = ({
           {...getNotificationContent()}
         />
       )}
-      
+
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Registered Rockets</h2>
         <Button onClick={onAddNew}>Add New Rocket</Button>
       </div>
-      
+
       {rockets.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-md">
           <p className="text-gray-500">No rockets registered yet.</p>
