@@ -1,4 +1,3 @@
-// src/store/rocketApi.ts
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { Rocket, RocketFormData } from '../types';
 
@@ -23,6 +22,23 @@ export const rocketApi = createApi({
         });
       },
       providesTags: ['Rocket'],
+    }),
+    
+    // New endpoint to get a single rocket by ID
+    getRocketById: builder.query<Rocket, string>({
+      queryFn: (id) => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            const rocket = rocketData.find(rocket => rocket.id === id);
+            if (rocket) {
+              resolve({ data: rocket });
+            } else {
+              reject({ error: 'Rocket not found' });
+            }
+          }, 500);
+        });
+      },
+      providesTags: (result, error, id) => [{ type: 'Rocket', id }],
     }),
     
     addRocket: builder.mutation<Rocket, RocketFormData>({
@@ -57,12 +73,10 @@ export const rocketApi = createApi({
                 reject({ error: 'Rocket not found' });
                 return;
               }
-              
               const updatedRocket: Rocket = { ...data, id };
-              rocketData = rocketData.map(rocket => 
+              rocketData = rocketData.map(rocket =>
                 rocket.id === id ? updatedRocket : rocket
               );
-              
               resolve({ data: updatedRocket });
             } catch (error) {
               reject({ error: 'Failed to update rocket' });
@@ -84,7 +98,6 @@ export const rocketApi = createApi({
                 reject({ error: 'Rocket not found' });
                 return;
               }
-              
               rocketData = rocketData.filter(rocket => rocket.id !== id);
               resolve({ data: undefined });
             } catch (error) {
@@ -101,6 +114,7 @@ export const rocketApi = createApi({
 // Export hooks for using the API
 export const {
   useGetRocketsQuery,
+  useGetRocketByIdQuery,
   useAddRocketMutation,
   useUpdateRocketMutation,
   useDeleteRocketMutation,

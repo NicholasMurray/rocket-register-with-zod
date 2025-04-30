@@ -8,6 +8,7 @@ import { RocketFormPage2 } from './components/RocketForm/RocketFormPage2';
 import { RocketFormPage3 } from './components/RocketForm/RocketFormPage3';
 import { RocketFormSummary } from './components/RocketForm/RocketFormSummary';
 import { RocketsList } from './components/RocketsList/RocketsList';
+import { RocketDetail } from './components/RocketsList/RocketDetail';
 import { Button } from './components/ui/Button';
 import { ErrorSummary } from './components/ui/ErrorSummary';
 import { useDispatch, useSelector } from 'react-redux';
@@ -39,14 +40,15 @@ enum FormStep {
   Page2,
   Page3,
   Summary,
-  List
+  List,
+  Detail // New step for viewing rocket details
 }
 
 const App: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<FormStep>(FormStep.List);
+  const [viewingRocketId, setViewingRocketId] = useState<string | null>(null); // Track which rocket is being viewed
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  // Add new state to track operation type
   const [operationType, setOperationType] = useState<'create' | 'update' | 'none'>('none');
   
   const dispatch = useDispatch();
@@ -250,6 +252,18 @@ const App: React.FC = () => {
     }
   };
 
+  // New handler for viewing rocket details
+  const handleViewRocket = (id: string) => {
+    setViewingRocketId(id);
+    setCurrentStep(FormStep.Detail);
+  };
+
+  // Handler to go back to list from details view
+  const handleBackToList = () => {
+    setViewingRocketId(null);
+    setCurrentStep(FormStep.List);
+  };
+
   const resetSubmissionStatus = () => {
     setSubmissionStatus('idle');
     setOperationType('none');
@@ -331,12 +345,21 @@ const App: React.FC = () => {
             rockets={rockets}
             onEdit={handleStartEditing}
             onDelete={handleDeleteRocket}
+            onView={handleViewRocket}
             onAddNew={handleAddNew}
             submissionStatus={submissionStatus}
             resetStatus={resetSubmissionStatus}
-            operationType={operationType} // Pass the new prop
-        />
+            operationType={operationType}
+          />
         );
+      case FormStep.Detail:
+        return viewingRocketId ? (
+          <RocketDetail
+            rocketId={viewingRocketId}
+            onBack={handleBackToList}
+            onEdit={handleStartEditing}
+          />
+        ) : null;
       default:
         return null;
     }
@@ -350,10 +373,11 @@ const App: React.FC = () => {
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6">
         <h1 className="text-2xl font-bold mb-6 text-center">
           {currentStep === FormStep.List ? 'Rocket Registry' : 
+           currentStep === FormStep.Detail ? 'Rocket Details' :
            editingRocket ? 'Edit Rocket' : 'Register New Rocket'}
         </h1>
         
-        {currentStep !== FormStep.List && (
+        {(currentStep !== FormStep.List && currentStep !== FormStep.Detail) && (
           <div className="mb-6">
             <div className="flex items-center justify-between">
               {[FormStep.Page1, FormStep.Page2, FormStep.Page3, FormStep.Summary].map((step, index) => (
