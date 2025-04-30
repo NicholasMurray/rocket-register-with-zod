@@ -15,24 +15,3 @@ export const rocketSchema = z.object({
 });
 
 export type RocketFormValues = z.infer<typeof rocketSchema>;
-
-// Define form step schemas
-export const page1Schema = rocketSchema.pick({
-  name: true,
-  model: true,
-  manufacturer: true,
-  yearBuilt: true,
-});
-
-export const page2Schema = rocketSchema.pick({
-  height: true,
-  diameter: true,
-  mass: true,
-  fuelType: true,
-});
-
-export const page3Schema = rocketSchema.pick({
-  maxThrust: true,
-  capacity: true,
-  description: true,
-});
