@@ -44,6 +44,8 @@ enum FormStep {
   Detail // New step for viewing rocket details
 }
 
+export type FieldName = keyof RocketFormValues;
+
 export const RocketRegistry: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<FormStep>(FormStep.List);
   const [viewingRocketId, setViewingRocketId] = useState<string | null>(null); // Track which rocket is being viewed
@@ -95,7 +97,7 @@ export const RocketRegistry: React.FC = () => {
   }, [methods]); // This will run only once on component mount
 
   // Get page-specific fields for validation
-  const getFieldsForCurrentStep = () => {
+  const getFieldsForCurrentStep = (): FieldName[] => {
     switch (currentStep) {
       case FormStep.Page1:
         return ['name', 'model', 'manufacturer', 'yearBuilt'];
@@ -274,7 +276,10 @@ export const RocketRegistry: React.FC = () => {
     const allErrors = methods.formState.errors;
     const relevantFields = getFieldsForCurrentStep();
     
-    const stepErrors = {};
+    // Define the type for the step errors object
+    // This uses Record to create a type that maps field names to their error objects
+    const stepErrors: Record<FieldName, any> = {} as Record<FieldName, any>;
+    
     relevantFields.forEach(field => {
       if (allErrors[field]) {
         stepErrors[field] = allErrors[field];
@@ -285,7 +290,7 @@ export const RocketRegistry: React.FC = () => {
   };
 
   // Function to clear validation errors for a specific field
-  const clearFieldError = (fieldName: string) => {
+  const clearFieldError = (fieldName: FieldName) => {
     // Use clearErrors to remove error for that field
     methods.clearErrors(fieldName);
   };

@@ -5,12 +5,13 @@ import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { Button } from '../ui/Button';
 import { RocketFormValues } from '../../schemas/rocketSchema';
+import { FieldName } from '../../pages/RocketRegistry';
 
 interface RocketFormPage2Props {
   onNext: () => void;
   onPrevious: () => void;
   onCancel: () => void;
-  onFieldChange?: (fieldName: string) => void; // Updated to void return type
+  onFieldChange?: (fieldName: FieldName) => void; // Updated to void return type
 }
 
 export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({
@@ -22,8 +23,8 @@ export const RocketFormPage2: React.FC<RocketFormPage2Props> = ({
   const { register, formState: { errors } } = useFormContext<RocketFormValues>();
 
   // Handler for field changes - now just clears the error
-  const handleFieldChange = (fieldName: string) => {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFieldChange = (fieldName: FieldName) => {
+    return (_e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       if (onFieldChange) {
         // Clear error when user makes any change to the field
         onFieldChange(fieldName);
